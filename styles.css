@@ -48,17 +48,3 @@ footer {
     width: 100%;
     bottom: 0;
 }
-
-.games {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-}
-
-.game {
-    background-color: white;
-    padding: 20px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    width: 200px;
-}
