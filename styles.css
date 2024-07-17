@@ -112,24 +112,3 @@ footer {
     background-color: #ffb84d;
     transform: scale(1.05);
 }
-/* Other existing styles */
-
-.save-button, .load-button {
-    position: fixed;
-    bottom: 20px;
-    left: 150px; /* Adjust as necessary */
-    padding: 10px 20px;
-    background-color: #ff9500;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    font-size: 1em;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.3s ease;
-    margin-left: 10px;
-}
-
-.save-button:hover, .load-button:hover {
-    background-color: #ffb84d;
-    transform: scale(1.05);
-}
