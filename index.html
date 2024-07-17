@@ -10,9 +10,10 @@
 <body>
     <header>
         <h1>GamePlayground</h1>
+        <input type="text" id="gameSearch" placeholder="Search for games..." onkeyup="searchGames()">
     </header>
     <main>
-        <section class="games-grid">
+        <section class="games-grid" id="gamesGrid">
             <div class="game-item">
                 <a href="game1.html">
                     <img src="https://www.dhapaak.com/slope-game/dhapaak_assets/slope-game.jpg" alt="Slope">
@@ -57,12 +58,47 @@
             </div>
             <div class="game-item">
                 <a href="game8.html">
-                    <img src="https://images.crazygames.com/games/ovo/cover-1605160387375.png?auto=format,compress&q=75&cs=strip" alt="Run 3">
+                    <img src="https://images.crazygames.com/games/ovo/cover-1605160387375.png?auto=format,compress&q=75&cs=strip" alt="OvO">
                     <h2>OvO</h2>
+                </a>
+            </div>
+            <div class="game-item">
+                <a href="game9.html">
+                    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRFRCNh7SN6zhrGf8c_Gwa8VyLzGIj83lHfiQ&s" alt="3D Flip">
+                    <h2>3D Flip</h2>
+                </a>
+            </div>
+            <div class="game-item">
+                <a href="game10.html">
+                    <img src="https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcT5LruB_CKB1Ts_Nx9D3mFanJz10bAgKDV2MRlRbY8KT4NjXaml" alt="Johnny Trigger">
+                    <h2>Johnny Trigger</h2>
+                </a>
+            </div>
+            <div class="game-item">
+                <a href="game11.html">
+                    <img src="https://lh6.googleusercontent.com/XErhfRXjK0_0g8EdyVVEWzUXns0sEr6vItiIoAcLinFQvRHlNx7kQZU9y20PwMr--VLf9hT9iJdVis5TRFr9mFdQSKWTLg0WwvSfRz6o16sqqOUYCZzu9vZOooRR-4E5bQ=w1280" alt="Time Shooter 3: SWAT">
+                    <h2>Time Shooter 3: SWAT</h2>
+                </a>
+            </div>
         </section>
     </main>
     <footer>
         <p>&copy; 2024 GamePlayground</p>
     </footer>
+    <script>
+        function searchGames() {
+            let input = document.getElementById('gameSearch').value.toLowerCase();
+            let gameItems = document.getElementsByClassName('game-item');
+            
+            for (let i = 0; i < gameItems.length; i++) {
+                let gameTitle = gameItems[i].getElementsByTagName('h2')[0].innerText.toLowerCase();
+                if (gameTitle.includes(input)) {
+                    gameItems[i].style.display = '';
+                } else {
+                    gameItems[i].style.display = 'none';
+                }
+            }
+        }
+    </script>
 </body>
 </html>
