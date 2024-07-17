@@ -7,7 +7,29 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body style="margin: 0px; height: 100vh;">
-    <iframe src="https://google-opensocial.googleusercontent.com/gadgets/ifr?url=https://72682389-756457502729861133.preview.editmysite.com/uploads/b/11886820-896015480911618794/files/tf.xml&container=ig" style="border: none; width: 100%; height: 100%; margin: 0px;"></iframe>
+    <iframe id="gameFrame" src="https://google-opensocial.googleusercontent.com/gadgets/ifr?url=https://72682389-756457502729861133.preview.editmysite.com/uploads/b/11886820-896015480911618794/files/tf.xml&container=ig" style="border: none; width: 100%; height: 100%; margin: 0px;"></iframe>
     <button class="back-button" onclick="location.href='index.html'">Back to Home</button>
+    <button class="save-button" onclick="saveGame()">Save Game</button>
+    <button class="load-button" onclick="loadGame()">Load Game</button>
+
+    <script>
+        function saveGame() {
+            const iframe = document.getElementById('gameFrame');
+            const gameState = iframe.contentWindow.getGameState(); // Assuming the game has a method to get its state
+            localStorage.setItem('tinyFishingGameState', JSON.stringify(gameState));
+            alert('Game saved!');
+        }
+
+        function loadGame() {
+            const gameState = JSON.parse(localStorage.getItem('tinyFishingGameState'));
+            if (gameState) {
+                const iframe = document.getElementById('gameFrame');
+                iframe.contentWindow.setGameState(gameState); // Assuming the game has a method to set its state
+                alert('Game loaded!');
+            } else {
+                alert('No saved game found.');
+            }
+        }
+    </script>
 </body>
 </html>
