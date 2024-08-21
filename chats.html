@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Chatroom</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        .authDiv, #chatSection, #createRoomDiv, #chatRoomInterface {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            width: 300px;
+            text-align: center;
+        }
+
+        input {
+            margin: 10px 0;
+            padding: 10px;
+            width: 80%;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #chatroomContainer {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+
+        #chatMessages {
+            background-color: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            height: 200px;
+            overflow-y: auto;
+            margin-bottom: 10px;
+        }
+
+        #createRoomButton {
+            background-color: #ff6666;
+        }
+
+        #generalChatButton {
+            margin-bottom: 10px;
+            background-color: #6c757d;
+            color: white;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Login/Register Section -->
+    <div id="authSection">
+        <div id="loginDiv" class="authDiv">
+            <h2>Login</h2>
+            <input type="text" id="loginUsername" placeholder="Username">
+            <input type="password" id="loginPassword" placeholder="Password">
+            <button onclick="login()">Login</button>
+            <button onclick="showRegister()">Register</button>
+        </div>
+
+        <div id="registerDiv" class="authDiv" style="display:none;">
+            <h2>Register</h2>
+            <input type="text" id="registerUsername" placeholder="Username">
+            <input type="password" id="registerPassword" placeholder="Password">
+            <button onclick="register()">Register</button>
+            <button onclick="showLogin()">Back to Login</button>
+        </div>
+    </div>
+
+    <!-- Chatroom Selection and Creation Section -->
+    <div id="chatSection" style="display:none;">
+        <h2>Available Chatrooms</h2>
+        <input type="text" id="searchChatroom" placeholder="Search Chatrooms" oninput="filterChatrooms()">
+
+        <!-- General Chat Button -->
+        <button id="generalChatButton" onclick="joinGeneralChat()">General Chat (No Password)</button>
+
+        <!-- Scrollable Chatroom List -->
+        <div id="chatroomContainer">
+            <div id="chatroomList"></div>
+        </div>
+
+        <!-- Create Chat Room Button -->
+        <button id="createRoomButton" onclick="showCreateRoom()">Create Chat Room</button>
+    </div>
+
+    <!-- Chat Room Creation Section -->
+    <div id="createRoomDiv" style="display:none;">
+        <h3>Create Chat Room</h3>
+        <input type="text" id="roomName" placeholder="Room Name">
+        <input type="checkbox" id="setPasswordCheckbox" onclick="togglePasswordInput()"> Set Password
+        <input type="password" id="roomPassword" placeholder="Password" style="display:none;">
+        <button onclick="createChatroom()">Create</button>
+        <button onclick="hideCreateRoom()">Cancel</button>
+    </div>
+
+    <!-- Chat Room Interface -->
+    <div id="chatRoomInterface" style="display:none;">
+        <div id="chatMessages"></div>
+        <input type="text" id="messageInput" placeholder="Type a message">
+        <button onclick="sendMessage()">Send</button>
+        <button onclick="leaveChatroom()">Leave Chatroom</button>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.21.0/firebase-database-compat.js"></script>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDYxHG6rQq8hC-TQkfNHBI4zG2KEvq5g30",
+            authDomain: "online-site-test.firebaseapp.com",
+            databaseURL: "https://online-site-test-default-rtdb.firebaseio.com/",
+            projectId: "online-site-test",
+            storageBucket: "online-site-test.appspot.com",
+            messagingSenderId: "905068493240",
+            appId: "1:905068493240:web:c7435d5c0490ff7d23774d"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // Local Storage for user management
+        const users = JSON.parse(localStorage.getItem('users')) || {};
+
+        // Show and hide sections
+        function showRegister() {
+            document.getElementById('loginDiv').style.display = 'none';
+            document.getElementById('registerDiv').style.display = 'block';
+        }
+
+        function showLogin() {
+            document.getElementById('registerDiv').style.display = 'none';
+            document.getElementById('loginDiv').style.display = 'block';
+        }
+
+        function showCreateRoom() {
+            document.getElementById('createRoomDiv').style.display = 'block';
+        }
+
+        function hideCreateRoom() {
+            document.getElementById('createRoomDiv').style.display = 'none';
+        }
+
+        // Toggle password input visibility
+        function togglePasswordInput() {
+            const checkbox = document.getElementById('setPasswordCheckbox');
+            const passwordInput = document.getElementById('roomPassword');
+            passwordInput.style.display = checkbox.checked ? 'block' : 'none';
+        }
+
+        // Register new user
+        function register() {
+            const username = document.getElementById('registerUsername').value;
+            const password = document.getElementById('registerPassword').value;
+
+            if (users[username]) {
+                alert("Username already taken");
+            } else {
+                users[username] = password;
+                localStorage.setItem('users', JSON.stringify(users));
+                alert("Registered Successfully");
+                showLogin();
+            }
+        }
+
+        // Login user
+        function login() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+
+            if (users[username] && users[username] === password) {
+                alert("Logged in Successfully");
+                document.getElementById('authSection').style.display = 'none';
+                document.getElementById('chatSection').style.display = 'block';
+                localStorage.setItem('currentUser', username);
+                loadChatrooms();
+            } else {
+                alert("Incorrect Username or Password");
+            }
+        }
+
+        // Load chatrooms
+        function loadChatrooms() {
+            const chatroomList = document.getElementById('chatroomList');
+            chatroomList.innerHTML = '';
+
+            db.ref('chatrooms').on('child_added', (snapshot) => {
+                const chatroom = snapshot.val();
+                const chatroomDiv = document.createElement('div');
+                chatroomDiv.innerHTML = `<button onclick="joinChatroom('${chatroom.name}', '${chatroom.password}')">${chatroom.name}</button>`;
+                chatroomList.appendChild(chatroomDiv);
+            });
+        }
+
+        // Filter chatrooms based on search input
+        function filterChatrooms() {
+            const searchValue = document.getElementById('searchChatroom').value.toLowerCase();
+            const chatroomList = document.getElementById('chatroomList');
+            const chatroomButtons = chatroomList.getElementsByTagName('div');
+
+            for (let i = 0; i < chatroomButtons.length; i++) {
+                const chatroomButton = chatroomButtons[i].getElementsByTagName('button')[0];
+                if (chatroomButton) {
+                    const textValue = chatroomButton.textContent || chatroomButton.innerText;
+                    chatroomButtons[i].style.display = textValue.toLowerCase().includes(searchValue) ? '' : 'none';
+                }
+            }
+        }
+
+        // Join General Chat (No Password)
+        function joinGeneralChat() {
+            alert("Welcome to General Chat");
+            document.getElementById('chatSection').style.display = 'none';
+            document.getElementById('chatRoomInterface').style.display = 'block';
+            localStorage.setItem('currentChatroom', "General");
+            loadChatMessages("General");
+        }
+
+        // Join specified chatroom
+        function joinChatroom(name, password) {
+            const inputPassword = prompt("Enter Password");
+            if (inputPassword === password) {
+                alert(`Welcome to ${name}`);
+                document.getElementById('chatSection').style.display = 'none';
+                document.getElementById('chatRoomInterface').style.display = 'block';
+                localStorage.setItem('currentChatroom', name);
+                loadChatMessages(name);
+            } else {
+                alert("Incorrect Password");
+            }
+        }
+
+        // Load chat messages
+        function loadChatMessages(chatroom) {
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.innerHTML = '';
+
+            db.ref('messages/' + chatroom).on('child_added', (snapshot) => {
+                const message = snapshot.val();
+                const messageDiv = document.createElement('div');
+                messageDiv.textContent = message.user + ": " + message.text;
+                chatMessages.appendChild(messageDiv);
+            });
+        }
+
+        // Send message
+        function sendMessage() {
+            const messageInput = document.getElementById('messageInput').value;
+            const currentUser = localStorage.getItem('currentUser');
+            const currentChatroom = localStorage.getItem('currentChatroom');
+
+            db.ref('messages/' + currentChatroom).push({
+                user: currentUser,
+                text: messageInput
+            });
+
+            document.getElementById('messageInput').value = '';
+        }
+
+        // Leave chatroom
+        function leaveChatroom() {
+            document.getElementById('chatRoomInterface').style.display = 'none';
+            document.getElementById('chatSection').style.display = 'block';
+            localStorage.removeItem('currentChatroom');
+        }
+    </script>
+</body>
+</html>
