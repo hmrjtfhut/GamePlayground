@@ -115,7 +115,7 @@
     <!-- Chat Room Creation Section -->
     <div id="createRoomDiv" style="display:none;">
         <h3>Create Chat Room</h3>
-        <input type="text" id="roomName" placeholder="Room Name">
+        <input type="text" id="roomName" placeholder="Room Name" required>
         <input type="checkbox" id="setPasswordCheckbox" onclick="togglePasswordInput()"> Set Password
         <input type="password" id="roomPassword" placeholder="Password" style="display:none;">
         <button onclick="createChatroom()">Create</button>
@@ -217,7 +217,7 @@
             db.ref('chatrooms').on('child_added', (snapshot) => {
                 const chatroom = snapshot.val();
                 const chatroomDiv = document.createElement('div');
-                chatroomDiv.innerHTML = `<button onclick="joinChatroom('${chatroom.name}', '${chatroom.password}')">${chatroom.name}</button>`;
+                chatroomDiv.innerHTML = `<button onclick="joinChatroom('${chatroom.name}', '${chatroom.password || ''}')">${chatroom.name}</button>`;
                 chatroomList.appendChild(chatroomDiv);
             });
         }
@@ -237,9 +237,37 @@
             }
         }
 
-        // Join General Chat (No Password)
+        // Create chat room
+        function createChatroom() {
+            const roomName = document.getElementById('roomName').value;
+            const roomPassword = document.getElementById('roomPassword').value;
+            const passwordRequired = document.getElementById('setPasswordCheckbox').checked;
+
+            if (!roomName) {
+                alert("Room name cannot be empty.");
+                return;
+            }
+
+            const chatroomData = {
+                name: roomName,
+                password: passwordRequired ? roomPassword : null
+            };
+
+            // Save the chatroom to Firebase
+            db.ref('chatrooms').push(chatroomData, (error) => {
+                if (error) {
+                    alert("Error creating chatroom: " + error.message);
+                } else {
+                    alert("Chat room created successfully!");
+                    hideCreateRoom();
+                    loadChatrooms();
+                }
+            });
+        }
+
+        // Join general chatroom
         function joinGeneralChat() {
-            alert("Welcome to General Chat");
+            alert("Welcome to General Chat!");
             document.getElementById('chatSection').style.display = 'none';
             document.getElementById('chatRoomInterface').style.display = 'block';
             localStorage.setItem('currentChatroom', "General");
@@ -248,16 +276,18 @@
 
         // Join specified chatroom
         function joinChatroom(name, password) {
-            const inputPassword = prompt("Enter Password");
-            if (inputPassword === password) {
-                alert(`Welcome to ${name}`);
-                document.getElementById('chatSection').style.display = 'none';
-                document.getElementById('chatRoomInterface').style.display = 'block';
-                localStorage.setItem('currentChatroom', name);
-                loadChatMessages(name);
-            } else {
-                alert("Incorrect Password");
+            if (password) {
+                const inputPassword = prompt("Enter Password");
+                if (inputPassword !== password) {
+                    alert("Incorrect Password");
+                    return;
+                }
             }
+            alert(`Welcome to ${name}`);
+            document.getElementById('chatSection').style.display = 'none';
+            document.getElementById('chatRoomInterface').style.display = 'block';
+            localStorage.setItem('currentChatroom', name);
+            loadChatMessages(name);
         }
 
         // Load chat messages
