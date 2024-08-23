@@ -248,49 +248,41 @@
                 return;
             }
 
-            const chatroomData = {
+            const chatroomRef = db.ref('chatrooms').push();
+            chatroomRef.set({
                 name: roomName,
                 password: passwordRequired ? roomPassword : null
-            };
-
-            // Save the chatroom to Firebase
-            db.ref('chatrooms').push(chatroomData, (error) => {
-                if (error) {
-                    alert("Error creating chatroom: " + error.message);
-                } else {
-                    alert("Chat room created successfully!");
-                    hideCreateRoom();
-                    loadChatrooms();
-                }
             });
+
+            alert("Chat room created successfully!");
+            loadChatrooms();
+            hideCreateRoom();
         }
 
-        // Join general chatroom
-        function joinGeneralChat() {
-            alert("Welcome to General Chat!");
-            document.getElementById('chatSection').style.display = 'none';
-            document.getElementById('chatRoomInterface').style.display = 'block';
-            localStorage.setItem('currentChatroom', "General");
-            loadChatMessages("General");
-        }
+        // Join chatroom
+        function joinChatroom(roomName, roomPassword) {
+            const userPassword = roomPassword ? prompt("Enter room password:") : null;
 
-        // Join specified chatroom
-        function joinChatroom(name, password) {
-            if (password) {
-                const inputPassword = prompt("Enter Password");
-                if (inputPassword !== password) {
-                    alert("Incorrect Password");
-                    return;
-                }
+            if (roomPassword && userPassword !== roomPassword) {
+                alert("Incorrect password!");
+                return;
             }
-            alert(`Welcome to ${name}`);
+
+            localStorage.setItem('currentChatroom', roomName);
             document.getElementById('chatSection').style.display = 'none';
             document.getElementById('chatRoomInterface').style.display = 'block';
-            localStorage.setItem('currentChatroom', name);
-            loadChatMessages(name);
+            loadChatMessages(roomName);
         }
 
-        // Load chat messages
+        // Join general chat
+        function joinGeneralChat() {
+            localStorage.setItem('currentChatroom', 'general');
+            document.getElementById('chatSection').style.display = 'none';
+            document.getElementById('chatRoomInterface').style.display = 'block';
+            loadChatMessages('general');
+        }
+
+        // Load chat messages and scroll to the bottom
         function loadChatMessages(chatroom) {
             const chatMessages = document.getElementById('chatMessages');
             chatMessages.innerHTML = '';
@@ -300,28 +292,40 @@
                 const messageDiv = document.createElement('div');
                 messageDiv.textContent = message.user + ": " + message.text;
                 chatMessages.appendChild(messageDiv);
+
+                // Scroll to the bottom whenever a new message is added
+                chatMessages.scrollTop = chatMessages.scrollHeight;
             });
         }
 
         // Send message
         function sendMessage() {
-            const messageInput = document.getElementById('messageInput').value;
+            const messageInput = document.getElementById('messageInput').value.trim(); // Trim to remove extra spaces
             const currentUser = localStorage.getItem('currentUser');
             const currentChatroom = localStorage.getItem('currentChatroom');
 
-            db.ref('messages/' + currentChatroom).push({
-                user: currentUser,
-                text: messageInput
-            });
+            // Check if the message is not empty
+            if (messageInput) {
+                db.ref('messages/' + currentChatroom).push({
+                    user: currentUser,
+                    text: messageInput
+                });
 
-            document.getElementById('messageInput').value = '';
+                // Clear the input field after sending the message
+                document.getElementById('messageInput').value = '';
+
+                // Scroll to the bottom after sending the message
+                const chatMessages = document.getElementById('chatMessages');
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            } else {
+                alert("Message cannot be empty!");
+            }
         }
 
         // Leave chatroom
         function leaveChatroom() {
             document.getElementById('chatRoomInterface').style.display = 'none';
             document.getElementById('chatSection').style.display = 'block';
-            localStorage.removeItem('currentChatroom');
         }
     </script>
 </body>
