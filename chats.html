@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Chatroom</title>
+    <title>Enhanced Chatroom</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -72,9 +72,50 @@
             color: white;
             width: 100%;
         }
+
+        img.chat-image {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+
+        .active-user-count {
+            font-size: 0.8em;
+            color: #555;
+        }
+
+        @media (max-width: 600px) {
+            .authDiv, #chatSection, #createRoomDiv, #chatRoomInterface {
+                width: 90%;
+            }
+        }
+
+        #loadingIndicator {
+            display: none;
+            font-size: 1.2em;
+            color: #007bff;
+        }
+
+        .success-message {
+            color: green;
+        }
+
+        .error-message {
+            color: red;
+        }
+
+        #typingIndicator {
+            font-style: italic;
+            color: #777;
+        }
     </style>
 </head>
 <body>
+
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator">Loading...</div>
 
     <!-- Login/Register Section -->
     <div id="authSection">
@@ -97,18 +138,12 @@
 
     <!-- Chatroom Selection and Creation Section -->
     <div id="chatSection" style="display:none;">
-        <h2>Available Chatrooms</h2>
+        <h2>Available Chatrooms <span id="activeUserCount" class="active-user-count"></span></h2>
         <input type="text" id="searchChatroom" placeholder="Search Chatrooms" oninput="filterChatrooms()">
-
-        <!-- General Chat Button -->
         <button id="generalChatButton" onclick="joinGeneralChat()">General Chat (No Password)</button>
-
-        <!-- Scrollable Chatroom List -->
         <div id="chatroomContainer">
             <div id="chatroomList"></div>
         </div>
-
-        <!-- Create Chat Room Button -->
         <button id="createRoomButton" onclick="showCreateRoom()">Create Chat Room</button>
     </div>
 
@@ -125,7 +160,8 @@
     <!-- Chat Room Interface -->
     <div id="chatRoomInterface" style="display:none;">
         <div id="chatMessages"></div>
-        <input type="text" id="messageInput" placeholder="Type a message">
+        <div id="typingIndicator"></div>
+        <input type="text" id="messageInput" placeholder="Type a message" oninput="setTypingStatus(true)" onblur="setTypingStatus(false)">
         <button onclick="sendMessage()">Send</button>
         <button onclick="leaveChatroom()">Leave Chatroom</button>
     </div>
@@ -149,8 +185,26 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Local Storage for user management
-        const users = JSON.parse(localStorage.getItem('users')) || {};
+        let messageListener = null;
+        let typingListener = null;
+        let currentChatroom = null;
+
+        // Utility functions
+        function showLoader() {
+            document.getElementById('loadingIndicator').style.display = 'block';
+        }
+
+        function hideLoader() {
+            document.getElementById('loadingIndicator').style.display = 'none';
+        }
+
+        function displayMessage(message, type = 'success') {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type === 'success' ? 'success-message' : 'error-message';
+            messageDiv.textContent = message;
+            document.body.appendChild(messageDiv);
+            setTimeout(() => messageDiv.remove(), 3000);
+        }
 
         // Show and hide sections
         function showRegister() {
@@ -171,55 +225,98 @@
             document.getElementById('createRoomDiv').style.display = 'none';
         }
 
-        // Toggle password input visibility
         function togglePasswordInput() {
-            const checkbox = document.getElementById('setPasswordCheckbox');
             const passwordInput = document.getElementById('roomPassword');
-            passwordInput.style.display = checkbox.checked ? 'block' : 'none';
+            passwordInput.style.display = document.getElementById('setPasswordCheckbox').checked ? 'block' : 'none';
         }
 
-        // Register new user
+        // Registration Function
         function register() {
             const username = document.getElementById('registerUsername').value;
             const password = document.getElementById('registerPassword').value;
 
-            if (users[username]) {
-                alert("Username already taken");
-            } else {
-                users[username] = password;
-                localStorage.setItem('users', JSON.stringify(users));
-                alert("Registered Successfully");
-                showLogin();
+            if (!username || !password) {
+                displayMessage("Username and password cannot be empty.", 'error');
+                return;
             }
+
+            // Check if username already exists
+            db.ref('users/' + username).once('value').then(snapshot => {
+                if (snapshot.exists()) {
+                    displayMessage("Username already taken!", 'error');
+                } else {
+                    // Store the new user in the database
+                    db.ref('users/' + username).set({
+                        password: password
+                    }).then(() => {
+                        displayMessage("Registered Successfully!");
+                        showLogin();
+                    }).catch(error => {
+                        displayMessage("Error: " + error.message, 'error');
+                    });
+                }
+            });
         }
 
-        // Login user
+        // Login Function
         function login() {
             const username = document.getElementById('loginUsername').value;
             const password = document.getElementById('loginPassword').value;
 
-            if (users[username] && users[username] === password) {
-                alert("Logged in Successfully");
-                document.getElementById('authSection').style.display = 'none';
-                document.getElementById('chatSection').style.display = 'block';
-                localStorage.setItem('currentUser', username);
-                loadChatrooms();
-            } else {
-                alert("Incorrect Username or Password");
+            if (!username || !password) {
+                displayMessage("Username and password cannot be empty.", 'error');
+                return;
             }
+
+            // Check the username and password in the database
+            db.ref('users/' + username).once('value').then(snapshot => {
+                if (snapshot.exists()) {
+                    const storedPassword = snapshot.val().password;
+                    if (password === storedPassword) {
+                        displayMessage("Logged in Successfully!");
+                        document.getElementById('authSection').style.display = 'none';
+                        document.getElementById('chatSection').style.display = 'block';
+                        loadChatrooms();
+                        updateActiveUserCount();
+                    } else {
+                        displayMessage("Incorrect password!", 'error');
+                    }
+                } else {
+                    displayMessage("Username not found!", 'error');
+                }
+            });
         }
 
-        // Load chatrooms
+        // Load chatrooms and show active user count
         function loadChatrooms() {
             const chatroomList = document.getElementById('chatroomList');
             chatroomList.innerHTML = '';
 
-            db.ref('chatrooms').on('child_added', (snapshot) => {
+            db.ref('chatrooms').on('child_added', snapshot => {
                 const chatroom = snapshot.val();
                 const chatroomDiv = document.createElement('div');
                 chatroomDiv.innerHTML = `<button onclick="joinChatroom('${chatroom.name}', '${chatroom.password || ''}')">${chatroom.name}</button>`;
                 chatroomList.appendChild(chatroomDiv);
             });
+        }
+
+        // Update live active user count
+        function updateActiveUserCount() {
+            db.ref('activeUsers').on('value', snapshot => {
+                const activeUsers = snapshot.val() || {};
+                const activeUserCount = Object.keys(activeUsers).length;
+                document.getElementById('activeUserCount').textContent = `Active Users: ${activeUserCount}`;
+            });
+        }
+
+        // Add or remove user from active users list
+        function setActiveUserStatus(isActive) {
+            const currentUser = document.getElementById('loginUsername').value;
+            if (isActive) {
+                db.ref('activeUsers/' + currentUser).set(true);
+            } else {
+                db.ref('activeUsers/' + currentUser).remove();
+            }
         }
 
         // Filter chatrooms based on search input
@@ -244,7 +341,7 @@
             const passwordRequired = document.getElementById('setPasswordCheckbox').checked;
 
             if (!roomName) {
-                alert("Room name cannot be empty.");
+                displayMessage("Room name cannot be empty.", 'error');
                 return;
             }
 
@@ -254,31 +351,47 @@
                 password: passwordRequired ? roomPassword : null
             });
 
-            alert("Chat room created successfully!");
+            displayMessage("Chat room created successfully!");
             loadChatrooms();
             hideCreateRoom();
         }
 
         // Join chatroom
         function joinChatroom(roomName, roomPassword) {
+            if (messageListener || typingListener) {
+                // Remove existing listeners to avoid duplicates
+                db.ref('messages/' + currentChatroom).off('child_added', messageListener);
+                db.ref('typingStatus/' + currentChatroom).off('value', typingListener);
+            }
+
             const userPassword = roomPassword ? prompt("Enter room password:") : null;
 
             if (roomPassword && userPassword !== roomPassword) {
-                alert("Incorrect password!");
+                displayMessage("Incorrect password!", 'error');
                 return;
             }
 
             localStorage.setItem('currentChatroom', roomName);
+            currentChatroom = roomName;
             document.getElementById('chatSection').style.display = 'none';
             document.getElementById('chatRoomInterface').style.display = 'block';
+            setActiveUserStatus(true);
             loadChatMessages(roomName);
         }
 
         // Join general chat
         function joinGeneralChat() {
+            if (messageListener || typingListener) {
+                // Remove existing listeners to avoid duplicates
+                db.ref('messages/' + currentChatroom).off('child_added', messageListener);
+                db.ref('typingStatus/' + currentChatroom).off('value', typingListener);
+            }
+
             localStorage.setItem('currentChatroom', 'general');
+            currentChatroom = 'general';
             document.getElementById('chatSection').style.display = 'none';
             document.getElementById('chatRoomInterface').style.display = 'block';
+            setActiveUserStatus(true);
             loadChatMessages('general');
         }
 
@@ -287,43 +400,70 @@
             const chatMessages = document.getElementById('chatMessages');
             chatMessages.innerHTML = '';
 
-            db.ref('messages/' + chatroom).on('child_added', (snapshot) => {
+            messageListener = db.ref('messages/' + chatroom).limitToLast(50).on('child_added', snapshot => {
                 const message = snapshot.val();
                 const messageDiv = document.createElement('div');
-                messageDiv.textContent = message.user + ": " + message.text;
-                chatMessages.appendChild(messageDiv);
 
-                // Scroll to the bottom whenever a new message is added
+                // Check if the message is an image URL
+                if (message.text.match(/\.(jpeg|jpg|gif|png)$/) != null) {
+                    const img = document.createElement('img');
+                    img.src = message.text;
+                    img.className = "chat-image";
+                    messageDiv.appendChild(img);
+                } else {
+                    messageDiv.textContent = message.user + ": " + message.text;
+                }
+
+                chatMessages.appendChild(messageDiv);
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             });
+
+            // Listen for typing status updates
+            typingListener = db.ref('typingStatus/' + chatroom).on('value', snapshot => {
+                const typingUsers = snapshot.val();
+                if (typingUsers) {
+                    const typingStatus = Object.keys(typingUsers).filter(user => typingUsers[user]);
+                    document.getElementById('typingIndicator').textContent = typingStatus.length ? `${typingStatus.join(', ')} is typing...` : '';
+                }
+            });
+        }
+
+        // Set typing status
+        function setTypingStatus(isTyping) {
+            const currentUser = document.getElementById('loginUsername').value;
+            const currentChatroom = localStorage.getItem('currentChatroom');
+
+            db.ref('typingStatus/' + currentChatroom + '/' + currentUser).set(isTyping);
         }
 
         // Send message
         function sendMessage() {
-            const messageInput = document.getElementById('messageInput').value.trim(); // Trim to remove extra spaces
-            const currentUser = localStorage.getItem('currentUser');
+            const messageInput = document.getElementById('messageInput').value.trim();
+            const currentUser = document.getElementById('loginUsername').value;
             const currentChatroom = localStorage.getItem('currentChatroom');
 
-            // Check if the message is not empty
             if (messageInput) {
                 db.ref('messages/' + currentChatroom).push({
                     user: currentUser,
                     text: messageInput
                 });
 
-                // Clear the input field after sending the message
                 document.getElementById('messageInput').value = '';
-
-                // Scroll to the bottom after sending the message
                 const chatMessages = document.getElementById('chatMessages');
                 chatMessages.scrollTop = chatMessages.scrollHeight;
             } else {
-                alert("Message cannot be empty!");
+                displayMessage("Message cannot be empty!", 'error');
             }
         }
 
         // Leave chatroom
         function leaveChatroom() {
+            setActiveUserStatus(false);
+
+            // Remove listeners when leaving
+            if (messageListener) db.ref('messages/' + currentChatroom).off('child_added', messageListener);
+            if (typingListener) db.ref('typingStatus/' + currentChatroom).off('value', typingListener);
+
             document.getElementById('chatRoomInterface').style.display = 'none';
             document.getElementById('chatSection').style.display = 'block';
         }
