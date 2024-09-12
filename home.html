@@ -6,7 +6,7 @@
     <title>Game Playground</title>
     <link rel="stylesheet" href="styles.css">
     <style>
-        /* Ensure the hamburger menu is always visible and over everything */
+        /* Hamburger Menu always visible */
         .menu-toggle {
             display: flex;
             flex-direction: column;
@@ -24,7 +24,7 @@
             background-color: #e0e0e0;
         }
 
-        /* Adjust nav to be over everything and always fixed */
+        /* Hide the menu links by default */
         nav ul {
             display: none;
             flex-direction: column;
@@ -37,6 +37,7 @@
             z-index: 999;
         }
 
+        /* Show menu when "show" class is toggled */
         nav ul.show {
             display: flex;
         }
@@ -45,6 +46,7 @@
             margin: 15px 0;
         }
 
+        /* Ensure everything looks good regardless of screen size */
         @media (max-width: 768px) {
             nav ul {
                 display: none;
@@ -54,7 +56,7 @@
 </head>
 <body>
 
-    <!-- Remove the "GamePlayground" header -->
+    <!-- No extra header, just the hamburger menu -->
     <div class="menu-toggle" id="menu-toggle">
         <div></div>
         <div></div>
@@ -65,11 +67,11 @@
             <li><a href="home.html">Home</a></li>
             <li><a href="games.html">Games</a></li>
             <li><a href="movies.html">Movies</a></li>
-            <li><a href="info.html">Info</a></li>
+            <li><a href="info.html">Info</a></li> <!-- Info link -->
         </ul>
     </nav>
 
-    <main style="margin-top: 100px;"> <!-- Push content down slightly to avoid overlap -->
+    <main style="margin-top: 100px;"> <!-- Push content down to avoid overlap -->
         <!DOCTYPE html>
         <html lang="en">
         <head>
@@ -743,6 +745,7 @@
         const menuToggle = document.getElementById('menu-toggle');
         const navMenu = document.getElementById('nav-menu');
 
+        // Toggle visibility of the menu on hamburger click
         menuToggle.addEventListener('click', () => {
             navMenu.classList.toggle('show');
         });
