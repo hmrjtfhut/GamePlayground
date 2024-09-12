@@ -27,7 +27,7 @@ nav ul li {
     display: inline-block;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 7680px) {
     nav ul {
         display: none;
         flex-direction: column;
