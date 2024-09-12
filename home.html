@@ -5,26 +5,71 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game Playground</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Ensure the hamburger menu is always visible and over everything */
+        .menu-toggle {
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000; /* Ensure it's on top */
+        }
+
+        .menu-toggle div {
+            width: 30px;
+            height: 3px;
+            margin: 5px;
+            background-color: #e0e0e0;
+        }
+
+        /* Adjust nav to be over everything and always fixed */
+        nav ul {
+            display: none;
+            flex-direction: column;
+            background-color: #202020;
+            position: fixed;
+            top: 60px;
+            right: 0;
+            width: 200px;
+            text-align: right;
+            z-index: 999;
+        }
+
+        nav ul.show {
+            display: flex;
+        }
+
+        nav ul li {
+            margin: 15px 0;
+        }
+
+        @media (max-width: 768px) {
+            nav ul {
+                display: none;
+            }
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <h1>Game Playground</h1>
-        <div class="menu-toggle" id="menu-toggle">
-            <div></div>
-            <div></div>
-            <div></div>
-        </div>
-        <nav>
-            <ul id="nav-menu" class="show"> <!-- Always show the menu -->
-                <li><a href="home.html">Home</a></li>
-                <li><a href="games.html">Games</a></li>
-                <li><a href="movies.html">Movies</a></li>
-                <li><a href="info.html">Info</a></li> <!-- Add info button -->
-            </ul>
-        </nav>
-    </header>
 
-    <main>
+    <!-- Remove the "GamePlayground" header -->
+    <div class="menu-toggle" id="menu-toggle">
+        <div></div>
+        <div></div>
+        <div></div>
+    </div>
+    <nav>
+        <ul id="nav-menu">
+            <li><a href="home.html">Home</a></li>
+            <li><a href="games.html">Games</a></li>
+            <li><a href="movies.html">Movies</a></li>
+            <li><a href="info.html">Info</a></li>
+        </ul>
+    </nav>
+
+    <main style="margin-top: 100px;"> <!-- Push content down slightly to avoid overlap -->
         <!DOCTYPE html>
         <html lang="en">
         <head>
