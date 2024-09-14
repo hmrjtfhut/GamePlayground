@@ -1,3 +1,32 @@
+/* Center the Game of the Week Section */
+.centered {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+/* Floating News Article Style */
+.floating-style {
+    display: inline-block;
+    padding: 15px;
+    background-color: #2a2a2a;
+    border-radius: 15px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.floating-style:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+}
+
+/* Style for News Image */
+.news-image {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+}
 /* Hamburger Menu */
 .menu-toggle {
     display: none;
