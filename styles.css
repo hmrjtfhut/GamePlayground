@@ -1,21 +1,45 @@
-/* Center the Game of the Week Section */
-.centered {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
+/* Game of the Week and News item: similar size */
+.game-item, .news-item {
+    width: 250px; /* Same width for both sections */
+    background-color: #1f1f1f;
+    border-radius: 10px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease;
 }
 
-/* Floating News Article Style */
+.game-item img, .news-item img {
+    width: 100%;
+    height: auto;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+.game-item h2, .news-item h2 {
+    margin: 15px 0;
+    color: #bb86fc;
+}
+
+.game-item p, .news-item p {
+    padding: 0 10px;
+    font-size: 0.9em;
+}
+
+/* Hover effect for both sections */
+.game-item:hover, .news-item:hover {
+    transform: translateY(-10px);
+}
+
+/* Floating News Article Style (no longer extra-large) */
 .floating-style {
-    display: inline-block;
-    padding: 15px;
+    width: 250px; /* Match the width of the Game of the Week */
+    padding: 0;
     background-color: #2a2a2a;
-    border-radius: 15px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
+/* Hover effect for news item */
 .floating-style:hover {
     transform: translateY(-10px);
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
@@ -25,8 +49,10 @@
 .news-image {
     width: 100%;
     height: auto;
-    border-radius: 10px;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
 }
+
 /* Hamburger Menu */
 .menu-toggle {
     display: none;
